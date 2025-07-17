@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <h1><i class="fas fa-robot me-3"></i>CrewAI Interview Automation</h1>
+    <p>Generate personalized interview questions and responses using AI agents</p>
+</div>
+
+<!-- Features Section -->
+<div class="row mb-4">
+    <div class="col-md-3 text-center mb-3">
+        <div class="feature-icon">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <h6>Recruiter Profiling</h6>
+        <small class="text-muted">Analyzes recruiter characteristics</small>
+    </div>
+    <div class="col-md-3 text-center mb-3">
+        <div class="feature-icon">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <h6>Candidate Analysis</h6>
+        <small class="text-muted">Reviews resume and GitHub profile</small>
+    </div>
+    <div class="col-md-3 text-center mb-3">
+        <div class="feature-icon">
+            <i class="fas fa-question-circle"></i>
+        </div>
+        <h6>Smart Questions</h6>
+        <small class="text-muted">Generates relevant interview questions</small>
+    </div>
+    <div class="col-md-3 text-center mb-3">
+        <div class="feature-icon">
+            <i class="fas fa-comments"></i>
+        </div>
+        <h6>Mock Responses</h6>
+        <small class="text-muted">Creates realistic candidate answers</small>
+    </div>
+</div>
+
+<form id="interviewForm" action="{{ url_for('generate_interview') }}" method="post">
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-user-tie me-2"></i>Recruiter Profile
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="recruiter_text" class="form-label">Recruiter Characteristics</label>
+                        <textarea class="form-control" id="recruiter_text" name="recruiter_text" rows="4" 
+                                placeholder="Describe the recruiter's background, interview style, and preferences..." required>Recruiter from tech startup, values innovation and technical depth, prefers direct communication and looks for candidates with strong problem-solving skills.</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-user-graduate me-2"></i>Candidate Information
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="github_url" class="form-label">GitHub Profile URL</label>
+                        <input type="url" class="form-control" id="github_url" name="github_url" 
+                               placeholder="https://github.com/username" value="https://github.com/amaarkhan" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="resume_text" class="form-label">Resume/Background</label>
+                        <textarea class="form-control" id="resume_text" name="resume_text" rows="6" 
+                                placeholder="Paste the candidate's resume or background information..." required>Amaar Khan is a Full Stack Developer and AI enthusiast with expertise in Python, JavaScript, React, Node.js, and machine learning. He has extensive experience building web applications, working with APIs, and creating innovative solutions. Active contributor to open-source projects with a passion for emerging technologies and automation.</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-briefcase me-2"></i>Job Description
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="job_description" class="form-label">Position Details</label>
+                        <textarea class="form-control" id="job_description" name="job_description" rows="12" 
+                                placeholder="Paste the complete job description including requirements, responsibilities, and qualifications..." required>Senior Full Stack Developer Position
+
+We are seeking a talented Full Stack Developer to join our dynamic team. The ideal candidate will have:
+
+- Strong proficiency in Python and JavaScript
+- Experience with React, Node.js, and modern web frameworks
+- Knowledge of API development and integration
+- Familiarity with machine learning and AI technologies
+- Experience with version control (Git) and collaborative development
+- Strong problem-solving skills and ability to work in agile environments
+- Excellent communication skills and team collaboration abilities
+
+Responsibilities:
+- Develop and maintain web applications using modern technologies
+- Design and implement RESTful APIs
+- Collaborate with cross-functional teams on product development
+- Contribute to architectural decisions and code reviews
+- Stay updated with latest technology trends and best practices</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <button type="submit" class="btn btn-primary btn-lg" id="generateBtn">
+            <i class="fas fa-magic me-2"></i>Generate Interview Simulation
+        </button>
+        <div class="loading-spinner mt-3" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Processing...</span>
+            </div>
+            <p class="mt-2 text-muted">Generating your interview simulation... This may take a few minutes.</p>
+        </div>
+    </div>
+</form>
+
+<!-- Sample Data Section -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-lightbulb me-2"></i>Quick Start Templates
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Tech Startup Recruiter</h6>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadTemplate('startup')">
+                            Load Template
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Enterprise Company</h6>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadTemplate('enterprise')">
+                            Load Template
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Remote-First Company</h6>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadTemplate('remote')">
+                            Load Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('interviewForm').addEventListener('submit', function() {
+    document.getElementById('generateBtn').style.display = 'none';
+    document.getElementById('loadingSpinner').style.display = 'block';
+});
+
+function loadTemplate(type) {
+    const templates = {
+        startup: {
+            recruiter: "Tech startup recruiter with 3+ years experience at fast-growing companies. Values innovation, speed, and cultural fit. Prefers casual but thorough interviews focusing on problem-solving abilities and adaptability. Appreciates candidates who can demonstrate real-world impact and learning agility.",
+            job: `Frontend Developer - Early Stage Startup
+
+Join our fast-growing fintech startup as a Frontend Developer. We're looking for someone who can:
+
+- Build responsive web applications using React and TypeScript
+- Work with RESTful APIs and state management (Redux/Zustand)  
+- Collaborate in a fast-paced, agile environment
+- Take ownership of features from design to deployment
+- Contribute to technical decisions and architecture
+
+Requirements:
+- 2+ years experience with React and modern JavaScript
+- Experience with CSS frameworks (Tailwind, Material-UI)
+- Familiarity with testing frameworks (Jest, Cypress)
+- Understanding of version control and CI/CD pipelines
+- Strong communication skills for remote collaboration`
+        },
+        enterprise: {
+            recruiter: "Senior technical recruiter at Fortune 500 company with 8+ years experience. Values thorough technical assessment, system design skills, and enterprise-level thinking. Conducts structured interviews with emphasis on scalability, security, and best practices. Prefers candidates with experience in large-scale systems.",
+            job: `Senior Software Engineer - Enterprise Solutions
+
+We are seeking a Senior Software Engineer to join our enterprise platform team. The role involves:
+
+- Designing and implementing scalable microservices architecture
+- Working with Java/Spring Boot, Docker, and Kubernetes
+- Developing RESTful APIs serving millions of requests daily
+- Ensuring security compliance and data protection standards
+- Mentoring junior developers and conducting code reviews
+
+Requirements:
+- 5+ years experience with Java/Spring ecosystem
+- Strong understanding of distributed systems and databases
+- Experience with cloud platforms (AWS, Azure, GCP)
+- Knowledge of security best practices and compliance standards
+- Experience with monitoring and observability tools
+- Bachelor's degree in Computer Science or equivalent`
+        },
+        remote: {
+            recruiter: "Remote-first company recruiter specializing in distributed teams. Values communication skills, self-motivation, and async collaboration abilities. Focuses on cultural fit for remote work, time management, and ability to work across time zones. Appreciates experience with remote collaboration tools.",
+            job: `Full Stack Developer - Remote First Company
+
+Join our fully remote team as a Full Stack Developer. We're building the future of remote collaboration tools.
+
+Key Responsibilities:
+- Develop features using React, Node.js, and PostgreSQL
+- Collaborate asynchronously with team members across 15+ time zones
+- Participate in pair programming and code review sessions
+- Contribute to technical documentation and knowledge sharing
+- Work with modern deployment pipelines and monitoring tools
+
+Requirements:
+- 3+ years experience with full stack web development
+- Strong communication skills for remote collaboration
+- Experience with async work patterns and documentation
+- Proficiency in React, Node.js, and SQL databases
+- Familiarity with remote collaboration tools (Slack, Notion, etc.)
+- Self-motivated with excellent time management skills`
+        }
+    };
+
+    if (templates[type]) {
+        document.getElementById('recruiter_text').value = templates[type].recruiter;
+        document.getElementById('job_description').value = templates[type].job;
+    }
+}
+</script>
+{% endblock %}

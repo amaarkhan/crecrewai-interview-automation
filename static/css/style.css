@@ -1,0 +1,52 @@
+/* Custom CSS for better interview result formatting */
+
+.interview-result {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.8;
+    font-size: 14px;
+}
+
+.interview-result .question {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 15px;
+    margin: 20px 0 10px 0;
+    border-radius: 4px;
+    font-weight: 600;
+    color: #1976d2;
+}
+
+.interview-result .answer {
+    background-color: #f8f9fa;
+    border-left: 4px solid #28a745;
+    padding: 15px;
+    margin: 10px 0 20px 0;
+    border-radius: 4px;
+    color: #495057;
+}
+
+.interview-result h1, .interview-result h2, .interview-result h3 {
+    color: #2c3e50;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+.interview-result .section-header {
+    background-color: #343a40;
+    color: white;
+    padding: 10px 15px;
+    margin: 25px 0 15px 0;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.copy-success-animation {
+    animation: fadeInOut 3s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-10px); }
+    20% { opacity: 1; transform: translateY(0); }
+    80% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); }
+}

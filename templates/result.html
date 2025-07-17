@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Results - CrewAI Interview Automation{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1><i class="fas fa-check-circle text-success me-3"></i>Interview Simulation Complete!</h1>
+    <p class="mb-0">Generated on {{ timestamp }}</p>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3><i class="fas fa-file-alt me-2"></i>Results</h3>
+            <div>
+                <button class="btn btn-outline-primary me-2" onclick="downloadResult()">
+                    <i class="fas fa-download me-1"></i>Download
+                </button>
+                <button class="btn btn-outline-secondary me-2" onclick="copyToClipboard()">
+                    <i class="fas fa-copy me-1"></i>Copy
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>New Interview
+                </a>
+            </div>
+        </div>
+    </div>
+</div>    <div class="card">
+        <div class="card-body">
+            <div id="resultContent" class="interview-result">{{ result|safe }}</div>
+        </div>
+    </div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-2"></i>What's Next?
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Review the generated questions</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Practice the sample answers</li>
+                    <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Customize for your specific needs</li>
+                    <li class="mb-0"><i class="fas fa-check text-success me-2"></i>Use as interview preparation guide</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-lightbulb me-2"></i>Tips for Success
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="fas fa-star text-warning me-2"></i>Practice answers out loud</li>
+                    <li class="mb-2"><i class="fas fa-star text-warning me-2"></i>Prepare specific examples</li>
+                    <li class="mb-2"><i class="fas fa-star text-warning me-2"></i>Research the company culture</li>
+                    <li class="mb-0"><i class="fas fa-star text-warning me-2"></i>Prepare questions to ask</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden elements for download functionality -->
+<div id="hiddenDownloadData" style="display: none;">{{ result }}</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function downloadResult() {
+    const content = document.getElementById('hiddenDownloadData').textContent;
+    const timestamp = '{{ timestamp }}';
+    const filename = `interview_simulation_${timestamp.replace(/[:\s-]/g, '_')}.txt`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
+function copyToClipboard() {
+    const content = document.getElementById('hiddenDownloadData').textContent;
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(content).then(function() {
+            showCopySuccess();
+        }, function(err) {
+            fallbackCopyTextToClipboard(content);
+        });
+    } else {
+        fallbackCopyTextToClipboard(content);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showCopySuccess();
+    } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showCopySuccess() {
+    const alertHtml = `
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            Results copied to clipboard successfully!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.querySelector('.container').insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(function() {
+        const alert = document.querySelector('.alert-success');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 3000);
+}
+
+// Auto-scroll to top on page load
+window.addEventListener('load', function() {
+    window.scrollTo(0, 0);
+    formatInterviewContent();
+});
+
+function formatInterviewContent() {
+    const content = document.getElementById('resultContent');
+    let html = content.innerHTML;
+    
+    // Format Q: and A: patterns
+    html = html.replace(/\*\*Q:\s*([^*]+)\*\*/g, '<div class="question"><i class="fas fa-question-circle me-2"></i><strong>Q:</strong> $1</div>');
+    html = html.replace(/\*\*A:\*\*/g, '<div class="answer"><i class="fas fa-comment me-2"></i><strong>A:</strong>');
+    
+    // Close answer divs (look for next question or end of content)
+    html = html.replace(/(<div class="answer">[^<]*(?:<[^>]*>[^<]*)*?)(?=<div class="question"|$)/g, '$1</div>');
+    
+    // Format section headers
+    html = html.replace(/\*\*Section \d+[^*]*\*\*/g, '<div class="section-header">$&</div>');
+    
+    // Format bold text
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    
+    // Preserve line breaks
+    html = html.replace(/\n/g, '<br>');
+    
+    content.innerHTML = html;
+}
+</script>
+{% endblock %}
