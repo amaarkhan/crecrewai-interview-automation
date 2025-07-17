@@ -1,5 +1,6 @@
 import os
 import time
+import requests
 from dotenv import load_dotenv
 from crewai import Agent, Task, Crew, LLM
 
@@ -25,6 +26,59 @@ def create_llm_with_retry():
                 print("All attempts failed. Using simplified configuration...")
                 return LLM(model="gemini/gemini-1.5-flash")
 
+def fetch_github_data(github_url):
+    """Fetch real data from GitHub profile"""
+    try:
+        # Extract username from GitHub URL
+        username = github_url.split('/')[-1]
+        
+        # GitHub API endpoints
+        user_url = f"https://api.github.com/users/{username}"
+        repos_url = f"https://api.github.com/users/{username}/repos?sort=updated&per_page=10"
+        
+        # Fetch user profile
+        user_response = requests.get(user_url)
+        repos_response = requests.get(repos_url)
+        
+        if user_response.status_code == 200 and repos_response.status_code == 200:
+            user_data = user_response.json()
+            repos_data = repos_response.json()
+            
+            # Extract relevant information
+            github_info = {
+                'name': user_data.get('name', 'Not provided'),
+                'bio': user_data.get('bio', 'No bio available'),
+                'public_repos': user_data.get('public_repos', 0),
+                'followers': user_data.get('followers', 0),
+                'following': user_data.get('following', 0),
+                'company': user_data.get('company', 'Not specified'),
+                'location': user_data.get('location', 'Not specified'),
+                'blog': user_data.get('blog', 'No blog'),
+                'created_at': user_data.get('created_at', ''),
+                'updated_at': user_data.get('updated_at', ''),
+                'top_repositories': []
+            }
+            
+            # Extract top repositories info
+            for repo in repos_data[:5]:  # Top 5 repos
+                repo_info = {
+                    'name': repo.get('name', ''),
+                    'description': repo.get('description', 'No description'),
+                    'language': repo.get('language', 'Not specified'),
+                    'stars': repo.get('stargazers_count', 0),
+                    'forks': repo.get('forks_count', 0),
+                    'updated_at': repo.get('updated_at', ''),
+                    'topics': repo.get('topics', [])
+                }
+                github_info['top_repositories'].append(repo_info)
+            
+            return github_info
+        else:
+            return {'error': f"Failed to fetch GitHub data. Status codes: User={user_response.status_code}, Repos={repos_response.status_code}"}
+            
+    except Exception as e:
+        return {'error': f"Error fetching GitHub data: {str(e)}"}
+
 # 🔐 Gemini LLM with retry logic
 print("🔄 Setting up LLM connection...")
 llm = create_llm_with_retry()
@@ -37,6 +91,40 @@ He has extensive experience building web applications, working with APIs, and cr
 Active contributor to open-source projects with a passion for emerging technologies and automation.
 """
 github_url = "https://github.com/amaarkhan"
+
+# 🔍 Fetch real GitHub data
+print("🔍 Fetching GitHub profile data...")
+github_data = fetch_github_data(github_url)
+if 'error' in github_data:
+    print(f"⚠️ Warning: {github_data['error']}")
+    github_info_text = f"GitHub URL: {github_url} (Could not fetch live data)"
+else:
+    print("✅ GitHub data fetched successfully!")
+    github_info_text = f"""
+REAL GITHUB PROFILE DATA for {github_url}:
+
+Personal Info:
+- Name: {github_data['name']}
+- Bio: {github_data['bio']}
+- Company: {github_data['company']}
+- Location: {github_data['location']}
+- Blog: {github_data['blog']}
+- Public Repositories: {github_data['public_repos']}
+- Followers: {github_data['followers']}
+- Following: {github_data['following']}
+- Account Created: {github_data['created_at']}
+
+Top 5 Recent Repositories:
+"""
+    for i, repo in enumerate(github_data['top_repositories'], 1):
+        github_info_text += f"""
+{i}. {repo['name']} ({repo['language']})
+   - Description: {repo['description']}
+   - Stars: {repo['stars']}, Forks: {repo['forks']}
+   - Topics: {', '.join(repo['topics']) if repo['topics'] else 'None'}
+   - Last Updated: {repo['updated_at']}
+"""
+
 job_description = """
 Senior Full Stack Developer Position
 We are seeking a talented Full Stack Developer to join our dynamic team. The ideal candidate will have:
@@ -84,10 +172,19 @@ candidate_agent = Agent(
 candidate_task = Task(
     description=f"""
     Given the following resume:\n{resumetext}\n\n
-    and GitHub URL: {github_url}\n\n
-    generate a candidate profile with technical skills, project strengths, and communication style.
+    and REAL GitHub profile data:\n{github_info_text}\n\n
+    
+    Analyze the candidate's technical skills, programming languages, project experience, and coding patterns based on their actual GitHub repositories and activity.
+    Pay attention to:
+    - Programming languages used in repositories
+    - Project complexity and diversity
+    - Repository descriptions and topics
+    - Community engagement (stars, forks)
+    - Recent activity and consistency
+    
+    Generate a comprehensive candidate profile.
     """,
-    expected_output="Candidate profile highlighting technical stack, interests, and communication tone.",
+    expected_output="Detailed candidate profile based on resume and REAL GitHub data including technical skills, project analysis, and communication style.",
     agent=candidate_agent
 )
 
